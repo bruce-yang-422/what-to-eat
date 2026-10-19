@@ -839,9 +839,11 @@
     $('#placeList').innerHTML = S.places.map((p) => {
       const n = S.restaurants.filter((r) => r.place === p.id).length;
       return `<li class="place-row${hasXY(p) ? '' : ' no-xy'}" data-pid="${esc(p.id)}">
-        ${icon('pin')}
+        ${hasXY(p)
+          ? `<a class="place-map" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener" aria-label="在 Google 地圖查看 ${esc(p.name)}" title="在 Google 地圖查看">${icon('pin')}</a>`
+          : icon('pin')}
         <div class="place-main" data-pset><div class="place-name">${esc(p.name)}</div>
-          <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? '已設定位置' : '<span class="unset">尚未設定位置</span>'}</div></div>
+          <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? esc(p.addr || '已設定位置') : '<span class="unset">尚未設定位置</span>'}</div></div>
         <button class="text-btn" type="button" data-pset>${hasXY(p) ? '修改位置' : '設定位置'}</button>
         <button class="icon-btn" type="button" data-pdel aria-label="刪除 ${esc(p.name)}">${icon('trash')}</button>
       </li>`;
@@ -1226,6 +1228,7 @@
     const has = cur && typeof cur.lat === 'number' && typeof cur.lng === 'number';
     loc.lat = has ? cur.lat : null;
     loc.lng = has ? cur.lng : null;
+    loc.addr = has && cur.addr ? cur.addr : ''; // 顯示在地點列表的名稱（搜尋結果或連結裡的店名），微調位置時保留
     loc.results = [];
     const name = target.type === 'place' ? target.place.name : ($('#fName').value.trim() || '店家');
     $('#locTitle').textContent = `設定位置：${name}`;
@@ -1264,7 +1267,7 @@
     // 貼的是 Google 地圖連結：直接讀座標
     if (/https?:\/\//.test(q)) {
       const r = parseMapsShare(q);
-      if (r.lat != null) { setLocPoint(r.lat, r.lng, r.name || 'Google 地圖上的位置', 17); return; }
+      if (r.lat != null) { loc.addr = r.name || ''; setLocPoint(r.lat, r.lng, r.name || 'Google 地圖上的位置', 17); return; }
       if (r.short) locHint('短網址無法直接讀取：請先在瀏覽器打開這個連結，跳到 Google 地圖後，複製網址列的完整網址再貼上', true);
       else locHint('這個連結裡找不到座標，請改用地址搜尋或在地圖上點選', true);
       return;
@@ -1308,13 +1311,15 @@
     if (!b) return;
     const r = loc.results[+b.dataset.li];
     $('#locResults').innerHTML = '';
-    setLocPoint(+r.lat, +r.lon, r.name || r.display_name.split(',')[0], 17);
+    loc.addr = r.name || r.display_name.split(',')[0];
+    setLocPoint(+r.lat, +r.lon, loc.addr, 17);
   });
 
   $('#btnLocHere').addEventListener('click', async () => {
     locHint('正在取得你的位置…');
     await locate(true);
     if (here.status !== 'ok') { locHint(here.status === 'denied' ? '沒有位置權限，請到瀏覽器設定允許' : '暫時無法定位', true); return; }
+    loc.addr = '';
     setLocPoint(here.lat, here.lng, '目前位置', 17);
   });
 
@@ -1324,11 +1329,15 @@
     if (t.type === 'place') {
       t.place.lat = loc.lat;
       t.place.lng = loc.lng;
+      if (loc.addr) t.place.addr = loc.addr.slice(0, 40);
+      else delete t.place.addr;
       save();
       renderPlaceList();
       renderPlaces();
       updateCount();
-      toast(`「${t.place.name}」位置已儲存`);
+      const row = $(`#placeList [data-pid="${t.place.id}"]`);
+      if (row) reflow(row, 'flash');
+      toast(`「${t.place.name}」位置已儲存${t.place.addr ? `：${t.place.addr}` : ''}`);
     } else {
       form.lat = loc.lat;
       form.lng = loc.lng;
@@ -1342,6 +1351,7 @@
     if (t.type === 'place') {
       delete t.place.lat;
       delete t.place.lng;
+      delete t.place.addr;
       save();
       renderPlaceList();
       renderPlaces();
