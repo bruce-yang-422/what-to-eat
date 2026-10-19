@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>今天吃什麼？｜上班族午餐晚餐決定器</title>
+  <meta name="description" content="午餐晚餐不知道吃什麼？依預算、口味、類型篩選，或從自己的口袋餐廳裡抽，上班族的日常選餐助手。" />
+  <meta name="theme-color" content="#fbf7f3" />
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="吃什麼" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="今天吃什麼？" />
+  <meta property="og:description" content="午餐晚餐選擇困難？交給我們決定。" />
+  <meta property="og:image" content="icons/icon-512.png" />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script>
+    // Apply saved theme before paint to avoid flash（預設亮色）
+    (function () { var t = 'light'; try { t = (JSON.parse(localStorage.getItem('wte:v1') || '{}').settings || {}).look || 'light'; } catch (e) {} if (t !== 'auto') document.documentElement.dataset.theme = t; })();
+  </script>
+</head>
+<body data-view="decide">
+  <!-- Icon sprite (line icons) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-dice" viewBox="0 0 24 24"><path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Z"/><path d="M3.5 7 12 11.5 20.5 7M12 11.5v10"/><circle cx="12" cy="6.8" r=".9" fill="currentColor" stroke="none"/><circle cx="7.3" cy="11.6" r=".9" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13.8" r=".9" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2.6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13M15 6.5v13"/></symbol>
+    <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M8.5 17.5h5l3-6.5h-6l-2 6.5M14 5h2.5l2 6.5"/><path d="M4 11h5"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21V3Z"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="8" cy="8" r="1.5"/></symbol>
+    <symbol id="i-steam" viewBox="0 0 24 24"><path d="M7 4c-1.5 2 1.5 4 0 6s1.5 4 0 6M12 4c-1.5 2 1.5 4 0 6s1.5 4 0 6M17 4c-1.5 2 1.5 4 0 6s1.5 4 0 6"/><path d="M5 20h14"/></symbol>
+    <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  </svg>
+
+  <div class="app">
+    <main class="content">
+      <!-- ================= 決定 ================= -->
+      <section class="view active" id="view-decide" aria-labelledby="decideTitle">
+        <header class="page-top">
+          <div>
+            <div class="brand-row"><img class="brand-logo" src="icons/icon-192.png" alt="" width="42" height="42" /><h1 class="serif" id="decideTitle">今天吃什麼？</h1></div>
+            <p>上班族的午餐／晚餐決定器</p>
+          </div>
+          <button class="icon-btn" type="button" data-goto="settings" aria-label="設定"><svg class="ic"><use href="#i-gear"/></svg></button>
+        </header>
+
+        <div class="install" id="install" hidden>
+          <img src="icons/icon-192.png" alt="" width="36" height="36" />
+          <div class="install-text"><strong>加到主畫面</strong><span id="installText">一鍵安裝，像 App 一樣秒開</span></div>
+          <button class="btn-small" id="btnInstall" type="button">安裝</button>
+          <button class="icon-btn" id="btnInstallClose" type="button" aria-label="關閉"><svg class="ic"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div class="utabs" id="modeTabs" role="tablist" aria-label="選擇模式">
+          <button type="button" role="tab" data-mode="type">食物類型</button>
+          <button type="button" role="tab" data-mode="pocket">口袋餐廳</button>
+        </div>
+
+        <div class="seg" id="mealSeg" role="group" aria-label="選擇餐別">
+          <button type="button" data-meal="L">午餐</button>
+          <button type="button" data-meal="D">晚餐</button>
+          <button type="button" data-meal="N">宵夜</button>
+        </div>
+
+        <div id="placeBlock" hidden>
+          <div class="locbar">
+            <svg class="ic"><use href="#i-pin"/></svg>
+            <label class="sr-only" for="placeSelect">地點</label>
+            <select id="placeSelect"></select>
+            <svg class="ic caret"><use href="#i-down"/></svg>
+            <span class="locbar-sep"></span>
+            <button class="icon-btn" id="btnLocate" type="button" aria-label="使用目前位置"><svg class="ic"><use href="#i-locate"/></svg></button>
+          </div>
+          <p class="place-status" id="placeStatus"></p>
+        </div>
+
+        <section class="card filters" aria-labelledby="filterTitle">
+          <h2 class="serif" id="filterTitle">今天想吃什麼？</h2>
+          <div class="fgroup">
+            <span class="flabel">預算</span>
+            <div class="chips" id="budgetChips"></div>
+          </div>
+          <div class="fgroup">
+            <span class="flabel">口味偏好 <small>可複選</small></span>
+            <div class="chips" id="moodChips"></div>
+          </div>
+          <div class="fgroup">
+            <span class="flabel">料理類型 <small>可複選</small></span>
+            <div class="chips" id="catChips"></div>
+          </div>
+          <button class="row-link" type="button" data-goto="settings">
+            <svg class="ic"><use href="#i-ban"/></svg>
+            <span id="avoidText">避開最近 3 天吃過</span>
+            <svg class="ic chev"><use href="#i-chevron"/></svg>
+          </button>
+        </section>
+
+        <button class="primary-btn" id="btnSpin" type="button">
+          <span id="btnSpinLabel">立刻決定</span>
+          <svg class="ic"><use href="#i-arrow"/></svg>
+        </button>
+        <div class="microcopy"><span id="poolCount">&nbsp;</span><button class="text-btn" id="btnReset" type="button" hidden>重設條件</button></div>
+      </section>
+
+      <!-- ================= 抽選結果 ================= -->
+      <section class="view" id="view-result" aria-labelledby="resultName">
+        <header class="bar">
+          <button class="icon-btn" id="btnBack" type="button" aria-label="返回"><svg class="ic"><use href="#i-back"/></svg></button>
+          <span class="bar-title serif">今天吃什麼？</span>
+          <button class="icon-btn" type="button" data-goto="settings" aria-label="設定"><svg class="ic"><use href="#i-gear"/></svg></button>
+        </header>
+
+        <div class="hero" id="hero">
+          <div class="hero-eyebrow">今日抽選結果</div>
+          <h2 class="hero-name serif" id="resultName">&nbsp;</h2>
+          <span class="tag" id="resultCat">&nbsp;</span>
+          <p class="hero-line serif" id="resultLine">今天就吃這個。</p>
+          <p class="hero-note" id="resultNote" hidden></p>
+          <div class="hero-meta">
+            <span><svg class="ic"><use href="#i-tag"/></svg><span id="resultPrice"></span></span>
+            <span class="hero-meta-sep"></span>
+            <span><svg class="ic"><use href="#i-steam"/></svg><span id="resultTags"></span></span>
+          </div>
+          <div class="hero-actions">
+            <button class="outline-btn" id="btnAgain" type="button"><svg class="ic"><use href="#i-refresh"/></svg>再選一次</button>
+            <button class="dark-btn" id="btnConfirm" type="button"><svg class="ic"><use href="#i-note"/></svg><span id="btnConfirmLabel">記錄這餐</span></button>
+          </div>
+        </div>
+
+        <section class="card list-card">
+          <div class="card-head"><svg class="ic"><use href="#i-pin"/></svg><span class="serif" id="linksTitle">附近找店家</span></div>
+          <a class="link-row" id="btnMap" href="#" target="_blank" rel="noopener"><svg class="ic"><use href="#i-map"/></svg><span id="btnMapLabel">Google 地圖</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
+          <a class="link-row" id="btnDelivery" href="https://www.foodpanda.com.tw/" target="_blank" rel="noopener"><svg class="ic"><use href="#i-bike"/></svg><span>foodpanda</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
+          <a class="link-row" id="btnUber" href="https://www.ubereats.com/tw" target="_blank" rel="noopener"><svg class="ic"><use href="#i-bag"/></svg><span>Uber Eats</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
+          <button class="link-row" id="btnShare" type="button"><svg class="ic"><use href="#i-share"/></svg><span>分享</span><svg class="ic chev"><use href="#i-chevron"/></svg></button>
+        </section>
+
+        <section class="card list-card" id="pocketCard">
+          <div class="card-head">
+            <svg class="ic"><use href="#i-bookmark"/></svg><span class="serif">我的口袋餐廳</span>
+            <button class="text-btn more" type="button" data-goto-rest>查看全部 <svg class="ic"><use href="#i-chevron"/></svg></button>
+          </div>
+          <div id="pocketRows"></div>
+        </section>
+      </section>
+
+      <!-- ================= 清單 ================= -->
+      <section class="view" id="view-list" aria-labelledby="listTitle">
+        <header class="page-top">
+          <div>
+            <h1 class="serif" id="listTitle">清單</h1>
+            <p id="listStat"></p>
+          </div>
+        </header>
+
+        <div class="utabs" id="listTabs" role="tablist" aria-label="清單種類">
+          <button type="button" role="tab" data-list="food">食物類型</button>
+          <button type="button" role="tab" data-list="rest">口袋餐廳</button>
+        </div>
+
+        <div class="locbar" id="listPlaceBar" hidden>
+          <svg class="ic"><use href="#i-pin"/></svg>
+          <label class="sr-only" for="listPlace">篩選地點</label>
+          <select id="listPlace"></select>
+          <svg class="ic caret"><use href="#i-down"/></svg>
+        </div>
+
+        <div class="list-top">
+          <span class="list-count" id="listCount"></span>
+          <label class="search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="listSearch" type="search" placeholder="搜尋名稱…" autocomplete="off" enterkeyhint="search" />
+          </label>
+        </div>
+        <div class="chips scroll" id="listCats"></div>
+
+        <div class="list-tools" id="listTools">
+          <span class="hint">關閉的項目不會被抽到</span>
+          <div>
+            <button class="text-btn" id="btnAllOn" type="button">全開</button>
+            <button class="text-btn" id="btnAllOff" type="button">全關</button>
+          </div>
+        </div>
+
+        <div class="groups" id="foodList"></div>
+        <div class="empty" id="listEmpty" hidden></div>
+
+        <button class="outline-btn wide" id="btnAdd" type="button"><svg class="ic"><use href="#i-plus"/></svg><span id="btnAddLabel">新增</span></button>
+      </section>
+
+      <!-- ================= 紀錄 ================= -->
+      <section class="view" id="view-history" aria-labelledby="historyTitle">
+        <header class="page-top">
+          <div>
+            <h1 class="serif" id="historyTitle">紀錄</h1>
+            <p>按下「記錄這餐」就會記在這裡</p>
+          </div>
+        </header>
+
+        <div class="stats">
+          <div class="stat"><div class="stat-num serif" id="statWeek">0</div><div class="stat-label">本週吃了幾餐</div></div>
+          <div class="stat"><div class="stat-num stat-text serif" id="statTop">—</div><div class="stat-label" id="statTopSub">近 30 天最常吃</div></div>
+        </div>
+
+        <div class="sec-head"><span class="serif">最近</span><button class="text-btn" id="btnClearHistory" type="button">清除全部</button></div>
+        <div id="historyList"></div>
+        <div class="empty" id="historyEmpty" hidden>還沒有紀錄<br /><small>抽到想吃的，按「記錄這餐」記下來吧</small></div>
+      </section>
+
+      <!-- ================= 設定 ================= -->
+      <section class="view" id="view-settings" aria-labelledby="settingsTitle">
+        <header class="page-top">
+          <div>
+            <h1 class="serif" id="settingsTitle">設定</h1>
+            <p>資料只存在這台裝置</p>
+          </div>
+        </header>
+
+        <section class="card">
+          <div class="setting">
+            <div><div class="setting-title">避免重複</div><div class="setting-desc">最近吃過的先不抽，換換口味</div></div>
+            <div class="seg small" id="avoidSeg" role="group" aria-label="避免重複天數">
+              <button type="button" data-avoid="0">關閉</button>
+              <button type="button" data-avoid="1">1 天</button>
+              <button type="button" data-avoid="3">3 天</button>
+              <button type="button" data-avoid="7">7 天</button>
+            </div>
+          </div>
+          <div class="setting inline">
+            <div><div class="setting-title">外觀</div><div class="setting-desc" id="lookDesc">亮色</div></div>
+            <div class="capsule" id="themeSeg" role="radiogroup" aria-label="外觀">
+              <span class="capsule-thumb" aria-hidden="true"></span>
+              <button type="button" role="radio" data-look="light" aria-label="亮色" title="亮色"><svg class="ic"><use href="#i-sun"/></svg></button>
+              <button type="button" role="radio" data-look="dark" aria-label="暗色" title="暗色"><svg class="ic"><use href="#i-moon"/></svg></button>
+              <button type="button" role="radio" data-look="auto" aria-label="跟隨系統" title="跟隨系統"><svg class="ic"><use href="#i-monitor"/></svg></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" id="placesCard">
+          <div class="setting-title">地點</div>
+          <div class="setting-desc">選「目前位置」時，會自動對應 3 公里內最近的地點</div>
+          <ul class="place-list" id="placeList"></ul>
+          <form class="place-add" id="placeForm" autocomplete="off">
+            <input class="input" id="placeName" maxlength="12" placeholder="新地點名稱，例如：客戶公司" />
+            <label class="check"><input type="checkbox" id="placeHere" checked /> 用目前位置</label>
+            <button class="outline-btn compact" type="submit"><svg class="ic"><use href="#i-plus"/></svg>新增</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="setting">
+            <div><div class="setting-title">備份資料</div><div class="setting-desc">口袋餐廳、地點、紀錄只存在這台裝置，換手機前記得匯出</div></div>
+            <div class="btn-row">
+              <button class="outline-btn" id="btnExport" type="button">匯出備份</button>
+              <button class="outline-btn" id="btnImport" type="button">匯入備份</button>
+              <input type="file" id="importFile" accept="application/json,.json" hidden />
+            </div>
+          </div>
+        </section>
+
+        <button class="text-btn danger center" id="btnResetAll" type="button">重設所有資料</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Tab bar -->
+  <nav class="tabbar" aria-label="主選單">
+    <div class="tabbar-inner" role="tablist">
+      <button class="tab" role="tab" data-view="decide" aria-selected="true"><svg class="ic"><use href="#i-dice"/></svg>決定</button>
+      <button class="tab" role="tab" data-view="list" aria-selected="false"><svg class="ic"><use href="#i-list"/></svg>清單</button>
+      <button class="tab" role="tab" data-view="history" aria-selected="false"><svg class="ic"><use href="#i-clock"/></svg>紀錄</button>
+      <button class="tab" role="tab" data-view="settings" aria-selected="false"><svg class="ic"><use href="#i-gear"/></svg>設定</button>
+    </div>
+  </nav>
+
+  <!-- 新增 / 編輯 -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3 class="serif" id="sheetTitle">新增</h3>
+      <button class="icon-btn" id="btnSheetClose" type="button" aria-label="關閉"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="addForm" novalidate>
+      <div class="field rest-only">
+        <label class="field-label" for="fRaw">貼上 Google 地圖分享內容 <small>（選填）</small></label>
+        <textarea class="input" id="fRaw" rows="2" placeholder="在 Google 地圖按「分享」→ 複製，貼到這裡會自動帶入店名"></textarea>
+        <div class="field-hint" id="fRawHint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="fName">名稱</label>
+        <input class="input" id="fName" maxlength="24" placeholder="例如：公司樓下的牛肉麵" autocomplete="off" required />
+      </div>
+      <div class="field rest-only">
+        <span class="field-label">地點</span>
+        <div class="chips" id="fPlace"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">類型</span>
+        <div class="chips" id="fCat"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">價位</span>
+        <div class="seg small" id="fPrice">
+          <button type="button" data-p="1">$150 以下</button>
+          <button type="button" data-p="2">$150–400</button>
+          <button type="button" data-p="3">$400 以上</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-label">適合時段</span>
+        <div class="chips" id="fMeal"></div>
+      </div>
+      <div class="field">
+        <span class="field-label">特色 <small>（選填）</small></span>
+        <div class="chips" id="fTags"></div>
+      </div>
+      <div class="field rest-only">
+        <span class="field-label">其他</span>
+        <div class="chips" id="fExtra"></div>
+      </div>
+      <div class="field rest-only">
+        <label class="field-label" for="fNote">備註 <small>（選填）</small></label>
+        <input class="input" id="fNote" maxlength="40" placeholder="例如：週日公休、推薦招牌乾麵" autocomplete="off" />
+      </div>
+      <div class="field">
+        <span class="field-label">圖示 <small>（依名稱自動選，也可自己換）</small></span>
+        <div class="emoji-grid" id="fEmoji"></div>
+      </div>
+      <div class="sheet-actions">
+        <button class="text-btn danger" type="button" id="btnDelete" hidden>刪除</button>
+        <button class="dark-btn big" type="submit" id="btnSubmit"><span id="btnSubmitLabel">加入清單</span></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status"><span id="toastText"></span><button type="button" id="toastAction" hidden></button></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
