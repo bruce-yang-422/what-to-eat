@@ -324,11 +324,10 @@
 
         <section class="card" id="placesCard">
           <div class="setting-title">地點</div>
-          <div class="setting-desc">可搜尋地址、貼 Google 地圖連結或用目前位置設定，不必人在現場。選「目前位置」時會自動對應 3 公里內最近的地點</div>
+          <div class="setting-desc">新增後可搜尋地址、貼 Google 地圖連結或在地圖上選，不必人在現場。人在 3 公里內時會自動切到該地點</div>
           <ul class="place-list" id="placeList"></ul>
           <form class="place-add" id="placeForm" autocomplete="off">
             <input class="input" id="placeName" maxlength="12" placeholder="新地點名稱，例如：客戶公司" />
-            <label class="check"><input type="checkbox" id="placeHere" checked /> 用目前位置</label>
             <button class="outline-btn compact" type="submit"><svg class="ic"><use href="#i-plus"/></svg>新增</button>
           </form>
         </section>

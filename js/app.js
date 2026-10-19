@@ -838,10 +838,10 @@
   function renderPlaceList() {
     $('#placeList').innerHTML = S.places.map((p) => {
       const n = S.restaurants.filter((r) => r.place === p.id).length;
-      return `<li class="place-row" data-pid="${esc(p.id)}">
+      return `<li class="place-row${hasXY(p) ? '' : ' no-xy'}" data-pid="${esc(p.id)}">
         ${icon('pin')}
-        <div class="place-main"><div class="place-name">${esc(p.name)}</div>
-          <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? '已設定位置' : '尚未設定位置'}</div></div>
+        <div class="place-main" data-pset><div class="place-name">${esc(p.name)}</div>
+          <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? '已設定位置' : '<span class="unset">尚未設定位置</span>'}</div></div>
         <button class="text-btn" type="button" data-pset>${hasXY(p) ? '修改位置' : '設定位置'}</button>
         <button class="icon-btn" type="button" data-pdel aria-label="刪除 ${esc(p.name)}">${icon('trash')}</button>
       </li>`;
@@ -896,16 +896,12 @@
     }
   });
 
-  $('#placeForm').addEventListener('submit', async (e) => {
+  $('#placeForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const inp = $('#placeName');
     const name = inp.value.trim();
     if (!name) { reflow(inp, 'shake'); inp.focus(); return; }
-    // 勾「用目前位置」：直接用現在的位置建立；沒勾：建立後打開位置設定（搜尋地址或貼連結）
-    if ($('#placeHere').checked) {
-      if (await saveHereAsPlace(name)) inp.value = '';
-      return;
-    }
+    // 建立後直接打開位置設定：搜尋地址、貼連結、在地圖上選，或在面板裡用目前位置
     const p = { id: uid('p'), name: name.slice(0, 12) };
     S.places.push(p);
     save();
