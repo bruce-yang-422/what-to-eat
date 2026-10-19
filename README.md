@@ -1,51 +1,76 @@
 # 今天吃什麼？
 
-上班族的午餐／晚餐決定器。純靜態 PWA，可直接部署到 GitHub Pages，支援離線與加到主畫面。
+上班族的午餐／晚餐／宵夜決定器。純靜態 PWA，免下載、免註冊，支援離線與加到主畫面。
 
 **立即使用 Live demo → <https://eat.stack-base.com/>**
 
-> 手機開啟後可「加到主畫面」，像 App 一樣使用。定位與開啟外送 App 等功能需透過上方 https 網址使用。
+> 手機開啟後可「加到主畫面」，像 App 一樣使用。定位功能需透過上方 https 網址使用。
 
 ## 功能
+
 - **兩種模式**
-  - **食物類型**：從 160+ 種台灣日常外食裡抽「吃什麼」
+  - **食物類型**：從 164 種台灣日常外食裡抽「吃什麼」
   - **口袋餐廳**：從自己存的店裡抽「去哪家」
+- **快速篩選**：時段（午餐／晚餐／宵夜）、預算（$150 以下／$150–400／$400 以上）、口味（熱的／清淡／重口味／快速／有湯／飯／麵）、料理類型
 - **地點**：可新增／刪除（預設「公司附近」「家附近」）；選「目前位置」會向瀏覽器要求定位，自動對應 3 公里內最近的地點
-- **新增餐廳**：貼上 Google 地圖分享內容自動帶入店名與位置，可標記可外送、備註
-- **快速篩選**：時段、預算、口味（熱的／清淡／重口味／快速／有湯／飯／麵）、料理類型
+- **新增餐廳**：貼上 Google 地圖分享內容，自動帶入店名與位置；可加備註、在店裡記下位置；圖示依名稱自動挑選
+- **抽選結果**：Google 地圖找附近店家或導航、分享給同事（手機用系統分享，電腦直接複製）；抽到食物時列出口袋名單裡的同類型餐廳
 - **避免重複**：最近 1／3／7 天吃過的先不抽；「再選一次」跳過的本次不再出現
-- **結果後續**：導航／Google 地圖找附近店家、foodpanda、Uber Eats 外送、分享給同事；抽到食物時列出口袋名單裡的同類型餐廳
-- **清單管理**：依類型分組，可整組開關、收合
-- **吃飯紀錄**：本週統計、最常吃、支援復原
-- **備份**：匯出／匯入 JSON
-- 外觀：亮色（預設）／暗色／跟隨系統，在「設定」用膠囊開關切換
-- iOS / Android 安裝提示、長按圖示快捷「立刻決定」
+- **清單管理**：食物先看類型總覽，點進某一類再開關個別品項；口袋餐廳以卡片顯示，可依地點、類型篩選
+- **吃飯紀錄**：本週統計、近 30 天最常吃、刪除可復原
+- **設定**：避免重複天數、外觀（亮色預設／暗色／跟隨系統）、地點管理、匯出／匯入 JSON 備份
+- **介面**：手機優先、底部分頁（決定／清單／紀錄／設定）、主色取自 logo，文字對比皆達 WCAG AA
+- **SEO**：canonical、Open Graph／Twitter 分享卡片（`icons/og-image.png`）、JSON-LD、`robots.txt`、`sitemap.xml`
 
 所有資料只存在瀏覽器 `localStorage`，無後端、無追蹤。
 
+## 檔案結構
+
+```text
+index.html            頁面與 SEO 標記
+css/style.css         樣式（亮色／暗色色票在 :root）
+js/data.js            預設食物資料
+js/app.js             程式邏輯
+sw.js                 Service Worker（離線快取）
+manifest.webmanifest  PWA 設定
+icons/                favicon、App 圖示、分享預覽圖
+CNAME                 自訂網域 eat.stack-base.com
+robots.txt / sitemap.xml
+```
+
 ## 本機預覽
+
 ```bash
 npx serve .
 # 或
 python -m http.server 8080
 ```
+
 > Service Worker 和定位都需要透過 http(s) 或 localhost 開啟，不能直接雙擊 `index.html`。
 
-## 部署到 GitHub Pages
-1. 推送此資料夾到 GitHub repo
-2. Settings → Pages → Source 選 `Deploy from a branch`，Branch 選 `main` / `(root)`
-3. 開啟 `https://<帳號>.github.io/<repo>/`
+## 部署
 
-所有路徑皆為相對路徑，放在子目錄也能正常運作。
+推送到 GitHub 的 `main` 分支後，GitHub Pages 會自動部署到 <https://eat.stack-base.com/>。
 
-## 更新版本
-修改內容後，請將 `sw.js` 內的 `VERSION` 改成新值，使用者下次開啟即會取得新版。
+- 網域設定：DNS 以 CNAME 將 `eat` 指向 `bruce-yang-422.github.io`，repo 根目錄的 `CNAME` 檔記錄網域
+- 所有路徑皆為相對路徑，改用 `https://<帳號>.github.io/<repo>/` 也能正常運作
+
+## 發布新版本
+
+推上線前，若有修改網站內容，把 `sw.js` 的 `VERSION` 往上調一版（例如 `wte-v1.0.0` → `wte-v1.0.1`），已開過網站的使用者下次開啟就會取得新版。只在發布時調整，不需要每次修改都改。
 
 ## 自訂預設清單
-編輯 [`js/data.js`](js/data.js)：
+
+編輯 [`js/data.js`](js/data.js)，依類型放進對應的區塊：
+
 ```js
-{ id: 'f999', n: '名稱', e: '🍜', c: '中式', p: 1, t: ['hot','noodle'], m: 'LD' }
+{ id: 'f165', n: '名稱', e: '🍜', c: '中式', p: 1, t: ['hot', 'noodle'], m: 'LD' }
 ```
-- `p`：1 銅板 / 2 平價 / 3 犒賞
-- `t`：`hot` `light` `heavy` `fast` `soup` `rice` `noodle`
-- `m`：`L` 午餐 `D` 晚餐 `N` 宵夜
+
+- `id`：`f` + 三位數流水號，依類型順序排列，新增從 `f165` 接續
+- `n`：名稱　`e`：emoji（請用 Emoji 11／2018 年以前的，舊版 Windows 與手機才顯示得出來）
+- `c`：類型，需為 `CATEGORIES` 其中之一
+- `p`：價位 `1` $150 以下／`2` $150–400／`3` $400 以上
+- `t`：口味標籤 `hot` `light` `heavy` `fast` `soup` `rice` `noodle`
+- `m`：時段 `L` 午餐 `D` 晚餐 `N` 宵夜
+- `q`：（選填）地圖搜尋關鍵字，未填則用名稱

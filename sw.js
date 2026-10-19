@@ -1,6 +1,6 @@
 /* Service Worker — offline-first app shell
  * 更新網站內容後，請修改 VERSION 讓使用者取得新版本 */
-const VERSION = 'wte-v3.3.0';
+const VERSION = 'wte-v1.0.0';
 const SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const SHELL = [
   './js/data.js',
   './js/app.js',
   './manifest.webmanifest',
+  './icons/favicon.ico',
   './icons/icon-32.png',
   './icons/icon-180.png',
   './icons/icon-192.png',

@@ -65,15 +65,11 @@
     settings: { avoidDays: 3, look: 'light' }, // look：light 亮色（預設）/ dark 暗色 / auto 跟隨系統
     filters: { budget: 0, moods: [], cats: [] },
   });
-  // 舊版用過、部分電腦或手機顯示不出來的 emoji，換成各系統都支援的
-  const EMOJI_COMPAT = { '🫖': '🍵', '🫓': '🍛', '🪿': '🍖', '🧆': '🍢', '🦪': '🐚', '🧋': '🥤' };
-  const compatEmoji = (list) => (list || []).forEach((x) => { if (x && EMOJI_COMPAT[x.e]) x.e = EMOJI_COMPAT[x.e]; });
 
   function load() {
     const d = defaults();
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || '{}');
-      [s.history, s.custom, s.restaurants].forEach(compatEmoji);
       return { ...d, ...s, settings: { ...d.settings, ...(s.settings || {}) }, filters: { ...d.filters, ...(s.filters || {}) } };
     } catch (e) { return d; }
   }
@@ -427,10 +423,6 @@
     $('#btnMap').href = mapUrl;
     $('#btnMapLabel').textContent = rest ? 'Google 地圖導航' : 'Google 地圖';
     $('#linksTitle').textContent = rest ? '怎麼去' : '附近找店家';
-    $('#btnDelivery').hidden = rest && !x.delivery;
-    // Uber Eats 支援用網址帶搜尋關鍵字
-    $('#btnUber').hidden = rest && !x.delivery;
-    $('#btnUber').href = `https://www.ubereats.com/tw/search?q=${encodeURIComponent(q)}`;
 
     // 類型模式：列出同類型的口袋餐廳
     const card = $('#pocketCard');
@@ -532,31 +524,6 @@
   $('#btnConfirm').addEventListener('click', confirmPick);
   $('#btnShare').addEventListener('click', share);
   $('#btnBack').addEventListener('click', () => switchView('decide'));
-  // 外送：先複製名稱（App 和 foodpanda 網頁都不吃網址裡的關鍵字，進去直接貼上）
-  // Android：用 intent:// 指定套件開 App，沒裝會自動退回網頁版
-  // iPhone：自訂 scheme 沒裝 App 會跳錯誤，所以維持 https，有裝 App 時由通用連結開啟
-  const DELIVERY_APPS = {
-    btnDelivery: { name: 'foodpanda', scheme: 'foodpanda', pkg: 'com.global.foodpanda.android' },
-    btnUber: { name: 'Uber Eats', scheme: 'ubereats', pkg: 'com.ubercab.eats' },
-  };
-  const isAndroid = /android/i.test(navigator.userAgent);
-
-  function openDelivery(e) {
-    if (!current) return;
-    const a = e.currentTarget;
-    const app = DELIVERY_APPS[a.id];
-    const q = current.kind === 'rest' ? current.n : (current.q || current.n);
-    navigator.clipboard?.writeText(q).then(
-      () => toast(`已複製「${q}」，到 ${app.name} 搜尋框貼上`),
-      () => toast(`到 ${app.name} 搜尋「${q}」`)
-    );
-    if (isAndroid) {
-      e.preventDefault();
-      location.href = `intent://#Intent;scheme=${app.scheme};package=${app.pkg};S.browser_fallback_url=${encodeURIComponent(a.href)};end`;
-    }
-  }
-  $('#btnDelivery').addEventListener('click', openDelivery);
-  $('#btnUber').addEventListener('click', openDelivery);
   $('#pocketCard').addEventListener('click', (e) => {
     if (e.target.closest('[data-goto-rest]')) { goRestList(); return; }
     if (e.target.closest('[data-go-add]')) { goAddRestaurant(); return; }
@@ -608,13 +575,12 @@
   let listQuery = '';
 
   const listSource = () => (listKind === 'rest' ? S.restaurants : allFoods());
-  const inCat = (x, c) => (c === '__custom' ? x.custom : c === '__delivery' ? x.delivery : x.c === c);
+  const inCat = (x, c) => (c === '__custom' ? x.custom : x.c === c);
   const catLabel = (c) => (c === '__custom' ? '自訂' : c);
 
   function renderListCats() {
     const cats = CATEGORIES.filter((c) => S.restaurants.some((x) => x.c === c));
     $('#listCats').innerHTML = chip('全部', 'data-lcat=""', !listCat) +
-      chip('可外送', 'data-lcat="__delivery"', listCat === '__delivery') +
       cats.map((c) => chip(c, `data-lcat="${c}"`, listCat === c)).join('');
   }
 
@@ -666,7 +632,7 @@
   function rcardHTML(r, dis) {
     const on = !dis.has(r.id);
     const place = placeById(r.place);
-    const sub = [r.c, PRICE[r.p], place ? place.name : '', r.delivery ? '可外送' : '', r.note].filter(Boolean).join(' · ');
+    const sub = [r.c, PRICE[r.p], place ? place.name : '', r.note].filter(Boolean).join(' · ');
     return `<div class="rcard${on ? '' : ' is-off'}" data-id="${esc(r.id)}">
       <span class="rc-icon">${esc(r.e)}</span>
       <div class="rc-main"><div class="rc-name">${esc(r.n)}</div><div class="rc-sub">${esc(sub)}</div></div>
@@ -969,7 +935,7 @@
 
   const newForm = (kind) => ({
     e: '🥢', eAuto: true, c: '中式', p: 1, m: new Set(['L', 'D']), t: new Set(),
-    place: kind === 'rest' ? defaultPlaceForNew() : null, delivery: false, lat: null, lng: null, url: '',
+    place: kind === 'rest' ? defaultPlaceForNew() : null, lat: null, lng: null, url: '',
   });
 
   function defaultPlaceForNew() {
@@ -991,7 +957,6 @@
         chip('不指定', 'data-fpl=""', !form.place);
       const xy = form.lat != null;
       $('#fExtra').innerHTML =
-        chip('可外送', 'data-fdel', form.delivery) +
         chip(`${icon('locate')}${xy ? '已記下店家位置' : '我在店裡，記下位置'}`, 'data-fxy', xy);
     }
   }
@@ -1004,7 +969,7 @@
     if (item) {
       Object.assign(form, {
         e: item.e, eAuto: false, c: item.c, p: item.p, m: new Set(item.m.split('')), t: new Set(item.t),
-        place: item.place || null, delivery: !!item.delivery,
+        place: item.place || null,
         lat: hasXY(item) ? item.lat : null, lng: hasXY(item) ? item.lng : null, url: item.url || '',
       });
     }
@@ -1078,7 +1043,6 @@
     else if (d.fm) form.m.has(d.fm) ? form.m.delete(d.fm) : form.m.add(d.fm);
     else if (d.ft) form.t.has(d.ft) ? form.t.delete(d.ft) : form.t.add(d.ft);
     else if ('fpl' in d) form.place = d.fpl || null;
-    else if ('fdel' in d) form.delivery = !form.delivery;
     else if ('fxy' in d) {
       if (form.lat != null) { form.lat = null; form.lng = null; }
       else {
@@ -1141,7 +1105,7 @@
     };
     let item;
     if (sheetKind === 'rest') {
-      item = { ...base, kind: 'rest', place: form.place, delivery: form.delivery, note: $('#fNote').value.trim() };
+      item = { ...base, kind: 'rest', place: form.place, note: $('#fNote').value.trim() };
       if (form.lat != null) { item.lat = form.lat; item.lng = form.lng; }
       if (form.url) item.url = form.url;
     } else {

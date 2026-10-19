@@ -3,13 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>今天吃什麼？｜上班族午餐晚餐決定器</title>
-  <meta name="description" content="午餐晚餐不知道吃什麼？依預算、口味、類型篩選，或從自己的口袋餐廳裡抽，上班族的日常選餐助手。" />
+  <title>今天吃什麼？午餐晚餐宵夜隨機決定器｜上班族選擇困難救星</title>
+  <meta name="description" content="午餐吃什麼、晚餐吃什麼？一鍵隨機幫你決定！160+ 種台灣日常外食，依預算、口味、料理類型篩選，也能從自己的口袋餐廳抽選，免下載、免註冊，手機電腦都能用。" />
+  <meta name="keywords" content="今天吃什麼,午餐吃什麼,晚餐吃什麼,宵夜吃什麼,吃什麼,選擇困難,午餐決定器,隨機選餐,外食,上班族午餐" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="author" content="Bruce Yang" />
+  <link rel="canonical" href="https://eat.stack-base.com/" />
   <meta name="theme-color" content="#fbf7f3" />
   <meta name="color-scheme" content="light dark" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,11 +22,42 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="吃什麼" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="今天吃什麼？" />
-  <meta property="og:description" content="午餐晚餐選擇困難？交給我們決定。" />
-  <meta property="og:image" content="icons/icon-512.png" />
+  <!-- Open Graph（LINE、Facebook 分享預覽） -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="今天吃什麼？" />
+  <meta property="og:locale" content="zh_TW" />
+  <meta property="og:url" content="https://eat.stack-base.com/" />
+  <meta property="og:title" content="今天吃什麼？午餐晚餐宵夜隨機決定器" />
+  <meta property="og:description" content="選擇困難？一鍵幫你決定今天吃什麼。160+ 種台灣外食，也能從自己的口袋餐廳抽。" />
+  <meta property="og:image" content="https://eat.stack-base.com/icons/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="今天吃什麼？上班族午餐、晚餐、宵夜決定器" />
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="今天吃什麼？午餐晚餐宵夜隨機決定器" />
+  <meta name="twitter:description" content="選擇困難？一鍵幫你決定今天吃什麼。" />
+  <meta name="twitter:image" content="https://eat.stack-base.com/icons/og-image.png" />
+
+  <!-- 結構化資料 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "今天吃什麼？",
+    "alternateName": "What to Eat Today",
+    "url": "https://eat.stack-base.com/",
+    "description": "上班族午餐、晚餐、宵夜隨機決定器。160+ 種台灣日常外食，依預算、口味、料理類型篩選，也能從自己的口袋餐廳抽選。",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": "zh-Hant-TW",
+    "isAccessibleForFree": true,
+    "image": "https://eat.stack-base.com/icons/og-image.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TWD" },
+    "author": { "@type": "Person", "name": "Bruce Yang" }
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -34,6 +70,13 @@
   </script>
 </head>
 <body data-view="decide">
+  <noscript>
+    <div style="max-width:560px;margin:40px auto;padding:0 20px;line-height:1.8">
+      <h1>今天吃什麼？午餐晚餐宵夜隨機決定器</h1>
+      <p>選擇困難的上班族救星：從 160+ 種台灣日常外食中，依預算、口味、料理類型一鍵隨機決定今天吃什麼，也能把常去的店存成口袋餐廳，從裡面抽選。</p>
+      <p>這個工具需要啟用 JavaScript 才能使用，請在瀏覽器設定中開啟後重新整理。</p>
+    </div>
+  </noscript>
   <!-- Icon sprite (line icons) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-dice" viewBox="0 0 24 24"><path d="M12 2.5 3.5 7v10L12 21.5 20.5 17V7L12 2.5Z"/><path d="M3.5 7 12 11.5 20.5 7M12 11.5v10"/><circle cx="12" cy="6.8" r=".9" fill="currentColor" stroke="none"/><circle cx="7.3" cy="11.6" r=".9" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13.8" r=".9" fill="currentColor" stroke="none"/></symbol>
@@ -43,8 +86,6 @@
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
     <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
     <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13M15 6.5v13"/></symbol>
-    <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M8.5 17.5h5l3-6.5h-6l-2 6.5M14 5h2.5l2 6.5"/><path d="M4 11h5"/></symbol>
-    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
     <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></symbol>
     <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21V3Z"/></symbol>
     <symbol id="i-more" viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3"/></symbol>
@@ -165,8 +206,6 @@
         <section class="card list-card">
           <div class="card-head"><svg class="ic"><use href="#i-pin"/></svg><span class="serif" id="linksTitle">附近找店家</span></div>
           <a class="link-row" id="btnMap" href="#" target="_blank" rel="noopener"><svg class="ic"><use href="#i-map"/></svg><span id="btnMapLabel">Google 地圖</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
-          <a class="link-row" id="btnDelivery" href="https://www.foodpanda.com.tw/" target="_blank" rel="noopener"><svg class="ic"><use href="#i-bike"/></svg><span>foodpanda</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
-          <a class="link-row" id="btnUber" href="https://www.ubereats.com/tw" target="_blank" rel="noopener"><svg class="ic"><use href="#i-bag"/></svg><span>Uber Eats</span><svg class="ic chev"><use href="#i-chevron"/></svg></a>
           <button class="link-row" id="btnShare" type="button"><svg class="ic"><use href="#i-share"/></svg><span>分享</span><svg class="ic chev"><use href="#i-chevron"/></svg></button>
         </section>
 
@@ -352,7 +391,7 @@
         <div class="chips" id="fTags"></div>
       </div>
       <div class="field rest-only">
-        <span class="field-label">其他</span>
+        <span class="field-label">店家位置 <small>（選填，用「目前位置」判斷附近時會用到）</small></span>
         <div class="chips" id="fExtra"></div>
       </div>
       <div class="field rest-only">
