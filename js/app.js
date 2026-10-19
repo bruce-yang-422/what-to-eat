@@ -20,14 +20,10 @@
   // ---------- Constants ----------
   const KEY = 'wte:v1';
   const MEALS = { L: { label: '午餐' }, D: { label: '晚餐' }, N: { label: '宵夜' } };
-  const BUDGETS = [
-    { v: 0, label: '不限' },
-    { v: 1, label: '省錢' },
-    { v: 2, label: '適中' },
-    { v: 3, label: '犒賞' },
-    { v: 4, label: '奢華' },
-    { v: 5, label: '極奢' },
-  ];
+  // 價位等級與說明都從 data.js 的 PRICE_BANDS 產生，價格帶只要改一處
+  const BUDGETS = [{ v: 0, label: '不限' }, ...PRICE_BANDS.map((b) => ({ v: b.v, label: b.label }))];
+  const bandRange = (b) => (b.min === 0 ? `約 $${b.max} 內` : b.max === Infinity ? `約 $${b.min - 1} 以上` : `約 $${b.min - 1}–${b.max}`);
+  const BUDGET_NOTE = `${PRICE_BANDS.map((b) => `${b.label} ${bandRange(b)}`).join('・')}（各店價差大，僅供參考）`;
   const MOODS = [
     ['hot', '熱的'], ['light', '清淡'], ['heavy', '重口味'], ['fast', '快速'],
     ['soup', '有湯'], ['rice', '飯'], ['noodle', '麵'],
@@ -35,7 +31,7 @@
   const TAG_LABEL = Object.fromEntries(MOODS);
   // 價位只分等級、不寫金額：同一道菜各店價差大，寫死金額容易誤導
   // p 可以是單一等級（2）或範圍（[2, 3]），例如牛肉麵一般店適中、名店到犒賞
-  const PRICE = { 1: '省錢', 2: '適中', 3: '犒賞', 4: '奢華', 5: '極奢' };
+  const PRICE = Object.fromEntries(PRICE_BANDS.map((b) => [b.v, b.label]));
   const tiers = (x) => [].concat(x.p);
   // 健康紅綠燈：依烹調方式（炸／炒煎勾芡／蒸煮燙涮）標記，參考成大美侖診所營養師「食物紅綠燈」
   const HEALTH = {
@@ -242,6 +238,7 @@
   }
 
   function renderFilters() {
+    $('#budgetNote').textContent = BUDGET_NOTE;
     $('#budgetChips').innerHTML = BUDGETS.map((b) => chip(b.label, `data-budget="${b.v}"`, false)).join('');
     $('#moodChips').innerHTML = MOODS.map(([k, l]) => chip(l, `data-mood="${k}"`, false)).join('');
     $('#catChips').innerHTML = chip('全部', 'data-cat=""', false) + CATEGORIES.map((c) => chip(c, `data-cat="${c}"`, false)).join('');
