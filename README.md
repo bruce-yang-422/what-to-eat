@@ -2,7 +2,7 @@
 
 上班族的午餐／晚餐決定器。純靜態 PWA，可直接部署到 GitHub Pages，支援離線與加到主畫面。
 
-**立即使用 Live demo → <https://bruce-yang-422.github.io/what-to-eat/>**
+**立即使用 Live demo → <https://eat.stack-base.com/>**
 
 > 手機開啟後可「加到主畫面」，像 App 一樣使用。定位與開啟外送 App 等功能需透過上方 https 網址使用。
 
