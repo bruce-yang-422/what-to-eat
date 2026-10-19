@@ -305,6 +305,7 @@
       return;
     }
     if (t.closest('[data-relocate]')) { locate(true); return; }
+    if (t.closest('[data-place-set]')) { const p = placeById(S.place); if (p) openLoc({ type: 'place', place: p }); return; }
     if (t.closest('[data-save-here]')) { saveHereAsPlace(); }
   });
 
@@ -329,7 +330,7 @@
 
   function renderMode() {
     $$('#modeTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === S.mode)));
-    $('#placeBlock').hidden = !isPocket();
+    $('#placeBlock').hidden = false; // 類型模式也顯示：決定 Google 地圖以哪個地點為中心找店
     $('#healthGroup').hidden = isPocket(); // 口袋餐廳沒有燈號
     renderPlaces();
     updateCount();
@@ -352,6 +353,14 @@
     $('#placeSelect').value = S.place;
 
     const st = $('#placeStatus');
+    if (current) $('#btnMap').href = mapUrl(current);
+    if (!isPocket()) {
+      const p = placeById(S.place);
+      st.innerHTML = !p ? 'Google 地圖會在你目前位置附近找店家'
+        : hasXY(p) ? `Google 地圖會以「${esc(p.name)}」為中心找店家`
+        : `「${esc(p.name)}」還沒設定位置，Google 地圖會用目前位置 · <button class="text-btn" type="button" data-place-set>設定位置</button>`;
+      return;
+    }
     if (S.place !== '__here') {
       const n = S.restaurants.filter((r) => r.place === S.place).length;
       st.textContent = `「${placeById(S.place).name}」有 ${n} 家口袋餐廳`;
@@ -376,7 +385,7 @@
     S.place = id;
     save();
     buzz(6);
-    if (id === '__here') locate(true);
+    if (id === '__here' && isPocket()) locate(true);
     renderPlaces();
     updateCount();
   });
@@ -414,6 +423,21 @@
   // ---------- Result ----------
   const heroEl = $('#hero');
 
+  // 搜尋中心：口袋餐廳用它所屬地點，類型模式用上方選的地點；都沒有位置時交給 Google 用目前位置
+  function searchCenter(x) {
+    const p = placeById(x.kind === 'rest' ? x.place : S.place);
+    return hasXY(p) ? p : null;
+  }
+
+  function mapUrl(x) {
+    const rest = x.kind === 'rest';
+    if (rest && x.url) return x.url;
+    if (rest && hasXY(x)) return `https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`;
+    const q = encodeURIComponent(rest ? x.n : (x.q || x.n));
+    const c = searchCenter(x);
+    return c ? `https://www.google.com/maps/search/${q}/@${c.lat},${c.lng},16z` : `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+
   function renderResult(x) {
     const rest = x.kind === 'rest';
     $('#resultName').textContent = x.n;
@@ -434,11 +458,7 @@
     $('#resultTags').textContent = tags.length ? tags.join('・') : x.m.split('').map((k) => MEALS[k].label).join('・');
 
     // 導航 / 附近找店
-    const q = rest ? x.n : (x.q || x.n);
-    let mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-    if (rest && x.url) mapUrl = x.url;
-    else if (rest && hasXY(x)) mapUrl = `https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}`;
-    $('#btnMap').href = mapUrl;
+    $('#btnMap').href = mapUrl(x);
     $('#btnMapLabel').textContent = rest ? 'Google 地圖導航' : 'Google 地圖';
     $('#linksTitle').textContent = rest ? '怎麼去' : '附近找店家';
 
