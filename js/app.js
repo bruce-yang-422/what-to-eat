@@ -22,9 +22,11 @@
   const MEALS = { L: { label: '午餐' }, D: { label: '晚餐' }, N: { label: '宵夜' } };
   const BUDGETS = [
     { v: 0, label: '不限' },
-    { v: 1, label: '月底' },
-    { v: 2, label: '發薪' },
-    { v: 3, label: '年終' },
+    { v: 1, label: '省錢' },
+    { v: 2, label: '適中' },
+    { v: 3, label: '犒賞' },
+    { v: 4, label: '奢華' },
+    { v: 5, label: '極奢' },
   ];
   const MOODS = [
     ['hot', '熱的'], ['light', '清淡'], ['heavy', '重口味'], ['fast', '快速'],
@@ -32,21 +34,28 @@
   ];
   const TAG_LABEL = Object.fromEntries(MOODS);
   // 價位只分等級、不寫金額：同一道菜各店價差大，寫死金額容易誤導
-  // p 可以是單一等級（2）或範圍（[2, 3]），例如牛肉麵一般店發薪、名店到年終
-  const PRICE = { 1: '月底', 2: '發薪', 3: '年終' };
+  // p 可以是單一等級（2）或範圍（[2, 3]），例如牛肉麵一般店適中、名店到犒賞
+  const PRICE = { 1: '省錢', 2: '適中', 3: '犒賞', 4: '奢華', 5: '極奢' };
   const tiers = (x) => [].concat(x.p);
+  // 健康紅綠燈：依烹調方式（炸／炒煎勾芡／蒸煮燙涮）標記，參考成大美侖診所營養師「食物紅綠燈」
+  const HEALTH = {
+    g: { label: '綠燈', tip: '可以常吃' },
+    y: { label: '黃燈', tip: '不宜天天吃' },
+    r: { label: '紅燈', tip: '偶爾吃就好' },
+  };
+  const healthTitle = (x) => (HEALTH[x.h] ? `${HEALTH[x.h].label}・${x.hn}：${HEALTH[x.h].tip}` : '');
   const priceLabel = (x) => { const t = tiers(x); return t.length > 1 ? `${PRICE[t[0]]}～${PRICE[t[t.length - 1]]}` : PRICE[t[0]]; };
   // 圖示選單：內建清單用到的 emoji 優先，再補幾個常用的
   const EMOJI_PICKS = [...new Set(['🍽️', ...FOODS.map((f) => f.e), '🥢', '🍰', '🥤', '☕', '🍺'])];
   // 依名稱自動挑圖示：先比對內建清單的品名，再比對關鍵字，最後用類型預設
   const EMOJI_KEYWORDS = [
     ['便當', '🍱'], ['壽司', '🍣'], ['拉麵', '🍜'], ['咖哩', '🍛'], ['義大利', '🍝'], ['披薩', '🍕'], ['漢堡', '🍔'],
-    ['三明治', '🥪'], ['吐司', '🍞'], ['麵包', '🥐'], ['貝果', '🥯'], ['早餐', '🍳'], ['早午餐', '🥞'], ['沙拉', '🥗'],
+    ['三明治', '🥪'], ['吐司', '🍞'], ['麵包', '🥐'], ['貝果', '🥯'], ['早餐', '🍳'], ['蛋餅', '🍳'], ['蘿蔔糕', '🥞'], ['早午餐', '🥞'], ['沙拉', '🥗'],
     ['牛排', '🥩'], ['燒肉', '🥩'], ['烤肉', '🥓'], ['鍋', '🍲'], ['湯', '🍲'], ['粥', '🥣'], ['餃', '🥟'], ['包子', '🥟'],
     ['飯糰', '🍙'], ['丼', '🍚'], ['飯', '🍚'], ['麵', '🍜'], ['粉', '🍜'], ['雞', '🍗'], ['炸', '🍗'], ['串', '🍢'], ['滷', '🍢'],
     ['蝦', '🍤'], ['魚', '🐟'], ['蛋', '🍳'], ['辣', '🌶️'], ['咖啡', '☕'], ['茶', '🥤'], ['飲', '🥤'], ['甜', '🍰'], ['酒', '🍺'], ['居酒屋', '🏮'],
   ];
-  const CAT_EMOJI = { 中式: '🥢', 小吃: '🍢', 日式: '🍣', 韓式: '🥘', 東南亞: '🍛', 西式: '🍝', 火鍋: '🍲', 速食: '🍔', 超商: '🍙', 輕食: '🥗' };
+  const CAT_EMOJI = { 中式: '🥢', 小吃: '🍢', 早餐店: '🍳', 日式: '🍣', 韓式: '🥘', 東南亞: '🍛', 西式: '🍝', 火鍋: '🍲', 速食: '🍔', 超商: '🍙', 輕食: '🥗', 素食: '🥬', 點心代餐: '🥤' };
 
   function guessEmoji(name, cat) {
     const n = name.trim();
@@ -414,6 +423,9 @@
     if (rest && x.note) notes.push(x.note);
     $('#resultNote').hidden = !notes.length;
     $('#resultNote').textContent = notes.join(' · ');
+    const hl = $('#resultHealth');
+    hl.hidden = !HEALTH[x.h];
+    if (HEALTH[x.h]) hl.innerHTML = `<i class="hdot h-${x.h}"></i><span><b>${HEALTH[x.h].label}</b>・${esc(x.hn)}，${HEALTH[x.h].tip}</span>`;
     $('#resultPrice').textContent = priceLabel(x);
     const tags = x.t.filter((t) => ['soup', 'hot', 'light', 'heavy', 'fast'].includes(t)).slice(0, 2).map((t) => TAG_LABEL[t]);
     $('#resultTags').textContent = tags.length ? tags.join('・') : x.m.split('').map((k) => MEALS[k].label).join('・');
@@ -467,6 +479,7 @@
     heroEl.classList.add('is-shuffling');
     $('#resultLine').textContent = '幫你挑選中…';
     $('#resultNote').hidden = true;
+    $('#resultHealth').hidden = true;
 
     const N = reduceMotion() ? 1 : 12;
     for (let i = 0; i < N; i++) {
@@ -604,7 +617,7 @@
     return `<li class="row${on ? '' : ' is-off'}" data-id="${esc(x.id)}">
       <span class="row-emoji">${esc(x.e)}</span>
       <div class="row-main">
-        <div class="row-name">${esc(x.n)}${x.custom ? '<span class="badge">自訂</span>' : ''}</div>
+        <div class="row-name">${esc(x.n)}${HEALTH[x.h] ? `<i class="hdot h-${x.h}" title="${esc(healthTitle(x))}" aria-label="${esc(healthTitle(x))}"></i>` : ''}${x.custom ? '<span class="badge">自訂</span>' : ''}</div>
         <div class="row-sub">${esc(sub)}</div>
       </div>
       ${x.custom ? `<button class="icon-btn" type="button" data-edit aria-label="編輯 ${esc(x.n)}">${icon('more')}</button>` : ''}
@@ -659,6 +672,7 @@
       renderListCats();
     }
     $('#listCats').hidden = !rest || !S.restaurants.length;
+    $('#healthLegend').hidden = rest;
     $('#btnAddLabel').textContent = rest ? '新增餐廳' : '新增食物';
     $('#listSearch').placeholder = rest ? '搜尋餐廳名稱…' : '搜尋食物…';
 

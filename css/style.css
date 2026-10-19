@@ -117,6 +117,7 @@ a { color: inherit; }
 .filters h2 { margin: 0 0 16px; font-size: 22px; font-weight: 700; letter-spacing: .05em; }
 .fgroup { margin-bottom: 18px; }
 .flabel { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: .04em; }
+.fnote { margin: 10px 2px 0; font-size: 12px; line-height: 1.6; color: var(--faint); }
 .flabel small { margin-left: 6px; font-size: 11px; font-weight: 500; color: var(--faint); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -188,6 +189,16 @@ a { color: inherit; }
 .tag { display: inline-block; padding: 3px 16px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font-size: 14px; font-weight: 700; letter-spacing: .14em; }
 .hero-line { margin: 14px 0 0; font-size: 19px; font-weight: 700; letter-spacing: .1em; }
 .hero-note { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+/* 健康紅綠燈：圓點是裝飾，旁邊一定有文字說明（燈號名稱） */
+.health { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 0; padding: 4px 12px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 70%, transparent); font-size: 13px; color: var(--ink-2); }
+.health b { color: var(--ink); font-weight: 700; }
+.hdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.hdot.h-g { background: #2f8a4c; }
+.hdot.h-y { background: #d9a21b; }
+.hdot.h-r { background: #d63c32; }
+.row-name .hdot { margin-left: 2px; }
+.health-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: -2px 2px 14px; font-size: 12px; color: var(--muted); }
+.health-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .hero-meta {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px; margin: 20px 0 18px; padding-top: 18px;
   border-top: 1px solid color-mix(in srgb, var(--muted) 30%, transparent); font-size: 15px; color: var(--ink-2);

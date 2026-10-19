@@ -155,6 +155,7 @@
           <div class="fgroup">
             <span class="flabel">預算</span>
             <div class="chips" id="budgetChips"></div>
+            <p class="fnote">省錢 約 $75 內・適中 約 $75–200・犒賞 約 $200–400・奢華 約 $400–800・極奢 約 $800 以上（各店價差大，僅供參考）</p>
           </div>
           <div class="fgroup">
             <span class="flabel">口味偏好 <small>可複選</small></span>
@@ -192,6 +193,7 @@
           <span class="tag" id="resultCat">&nbsp;</span>
           <p class="hero-line serif" id="resultLine">今天就吃這個。</p>
           <p class="hero-note" id="resultNote" hidden></p>
+          <p class="health" id="resultHealth" hidden></p>
           <div class="hero-meta">
             <span><svg class="ic"><use href="#i-tag"/></svg><span id="resultPrice"></span></span>
             <span class="hero-meta-sep"></span>
@@ -247,6 +249,7 @@
           </label>
         </div>
         <div class="chips scroll" id="listCats"></div>
+        <p class="health-legend" id="healthLegend"><span><i class="hdot h-g"></i>綠燈 可以常吃</span><span><i class="hdot h-y"></i>黃燈 不宜天天吃</span><span><i class="hdot h-r"></i>紅燈 偶爾吃就好</span></p>
 
         <div class="list-tools" id="listTools">
           <span class="hint">關閉的項目不會被抽到</span>
@@ -377,9 +380,11 @@
       <div class="field">
         <span class="field-label">價位 <small>（可複選，各店價差大的就選範圍）</small></span>
         <div class="seg small" id="fPrice">
-          <button type="button" data-p="1">月底</button>
-          <button type="button" data-p="2">發薪</button>
-          <button type="button" data-p="3">年終</button>
+          <button type="button" data-p="1">省錢</button>
+          <button type="button" data-p="2">適中</button>
+          <button type="button" data-p="3">犒賞</button>
+          <button type="button" data-p="4">奢華</button>
+          <button type="button" data-p="5">極奢</button>
         </div>
       </div>
       <div class="field">
