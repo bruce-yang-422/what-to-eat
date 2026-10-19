@@ -324,7 +324,7 @@
 
         <section class="card" id="placesCard">
           <div class="setting-title">地點</div>
-          <div class="setting-desc">選「目前位置」時，會自動對應 3 公里內最近的地點</div>
+          <div class="setting-desc">可搜尋地址、貼 Google 地圖連結或用目前位置設定，不必人在現場。選「目前位置」時會自動對應 3 公里內最近的地點</div>
           <ul class="place-list" id="placeList"></ul>
           <form class="place-add" id="placeForm" autocomplete="off">
             <input class="input" id="placeName" maxlength="12" placeholder="新地點名稱，例如：客戶公司" />
@@ -404,7 +404,7 @@
         <div class="chips" id="fTags"></div>
       </div>
       <div class="field rest-only">
-        <span class="field-label">店家位置 <small>（選填，用「目前位置」判斷附近時會用到）</small></span>
+        <span class="field-label">店家位置 <small>（選填，可搜尋地址設定；用「目前位置」判斷附近時會用到）</small></span>
         <div class="chips" id="fExtra"></div>
       </div>
       <div class="field rest-only">
@@ -420,6 +420,36 @@
         <button class="dark-btn big" type="submit" id="btnSubmit"><span id="btnSubmitLabel">加入清單</span></button>
       </div>
     </form>
+  </div>
+
+  <!-- 位置設定 -->
+  <div class="sheet-backdrop loc-backdrop" id="locBackdrop"></div>
+  <div class="sheet loc-sheet" id="locSheet" role="dialog" aria-modal="true" aria-labelledby="locTitle" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3 class="serif" id="locTitle">設定位置</h3>
+      <button class="icon-btn" id="btnLocClose" type="button" aria-label="關閉"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <form class="loc-search" id="locForm" autocomplete="off">
+      <label class="sr-only" for="locQuery">地址、地點名稱或 Google 地圖連結</label>
+      <input class="input" id="locQuery" placeholder="地址、地點名稱，或貼上 Google 地圖連結" enterkeyhint="search" />
+      <button class="dark-btn" type="submit"><svg class="ic"><use href="#i-search"/></svg>搜尋</button>
+    </form>
+    <div class="field-hint" id="locHint"></div>
+    <ul class="loc-results" id="locResults"></ul>
+    <div class="loc-actions">
+      <button class="outline-btn compact" id="btnLocHere" type="button"><svg class="ic"><use href="#i-locate"/></svg>使用目前位置</button>
+      <button class="outline-btn compact" id="btnLocPick" type="button"><svg class="ic"><use href="#i-pin"/></svg>在地圖上選擇</button>
+    </div>
+    <div class="loc-map-wrap">
+      <div class="loc-map" id="locMap"><span class="loc-map-empty">地圖載入中…</span></div>
+      <div class="loc-center-pin" id="locPin" hidden aria-hidden="true"><svg class="ic"><use href="#i-pin"/></svg></div>
+    </div>
+    <p class="fnote">拖動地圖讓中間的圖釘對準位置，點地圖某處也會移過去。地址搜尋與地圖資料來自 OpenStreetMap，搜尋文字會送到其伺服器。</p>
+    <div class="sheet-actions">
+      <button class="text-btn danger" type="button" id="btnLocClear" hidden>清除位置</button>
+      <button class="dark-btn big" type="button" id="btnLocSave" disabled>儲存位置</button>
+    </div>
   </div>
 
   <div class="toast" id="toast" role="status"><span id="toastText"></span><button type="button" id="toastAction" hidden></button></div>

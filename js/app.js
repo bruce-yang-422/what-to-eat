@@ -842,7 +842,7 @@
         ${icon('pin')}
         <div class="place-main"><div class="place-name">${esc(p.name)}</div>
           <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? '已設定位置' : '尚未設定位置'}</div></div>
-        <button class="text-btn" type="button" data-pset>${hasXY(p) ? '更新為目前位置' : '設為目前位置'}</button>
+        <button class="text-btn" type="button" data-pset>${hasXY(p) ? '修改位置' : '設定位置'}</button>
         <button class="icon-btn" type="button" data-pdel aria-label="刪除 ${esc(p.name)}">${icon('trash')}</button>
       </li>`;
     }).join('') || '<li class="place-row"><span class="place-sub">還沒有地點</span></li>';
@@ -873,17 +873,7 @@
     if (!row || !row.dataset.pid) return;
     const p = placeById(row.dataset.pid);
     if (!p) return;
-    if (e.target.closest('[data-pset]')) {
-      await locate(true);
-      if (here.status !== 'ok') { toast(here.status === 'denied' ? '沒有位置權限，請到瀏覽器設定允許' : '暫時無法定位'); return; }
-      p.lat = here.lat; p.lng = here.lng;
-      save();
-      renderPlaceList();
-      renderPlaces();
-      updateCount();
-      toast(`「${p.name}」已設為目前位置`);
-      return;
-    }
+    if (e.target.closest('[data-pset]')) { openLoc({ type: 'place', place: p }); return; }
     if (e.target.closest('[data-pdel]')) {
       const used = S.restaurants.filter((r) => r.place === p.id);
       if (used.length && !confirm(`「${p.name}」底下有 ${used.length} 家餐廳，刪除後會變成「未指定地點」。確定刪除？`)) return;
@@ -911,17 +901,18 @@
     const inp = $('#placeName');
     const name = inp.value.trim();
     if (!name) { reflow(inp, 'shake'); inp.focus(); return; }
+    // 勾「用目前位置」：直接用現在的位置建立；沒勾：建立後打開位置設定（搜尋地址或貼連結）
     if ($('#placeHere').checked) {
-      const p = await saveHereAsPlace(name);
-      if (!p) return;
-    } else {
-      S.places.push({ id: uid('p'), name: name.slice(0, 12) });
-      save();
-      renderPlaces();
-      renderPlaceList();
-      toast(`已新增地點「${name}」`);
+      if (await saveHereAsPlace(name)) inp.value = '';
+      return;
     }
+    const p = { id: uid('p'), name: name.slice(0, 12) };
+    S.places.push(p);
+    save();
+    renderPlaces();
+    renderPlaceList();
     inp.value = '';
+    openLoc({ type: 'place', place: p });
   });
 
   // ---------- Google 地圖分享內容解析 ----------
@@ -979,7 +970,7 @@
         chip('不指定', 'data-fpl=""', !form.place);
       const xy = form.lat != null;
       $('#fExtra').innerHTML =
-        chip(`${icon('locate')}${xy ? '已記下店家位置' : '我在店裡，記下位置'}`, 'data-fxy', xy);
+        chip(`${icon('pin')}${xy ? '已設定店家位置（點此修改）' : '設定店家位置'}`, 'data-fxy', xy);
     }
   }
 
@@ -1051,7 +1042,7 @@
     const got = [r.name && '店名', r.lat != null && '位置', r.url && '地圖連結'].filter(Boolean);
     if (got.length) hint.textContent = `已帶入：${got.join('、')}`;
     else { hint.textContent = '看不出店名，請手動填寫'; hint.classList.add('warn'); }
-    if (r.short && !r.name) { hint.textContent = '短網址無法讀出店名，請手動填寫（連結會保留給導航用）'; hint.classList.add('warn'); }
+    if (r.short && !r.name) { hint.textContent = '短網址無法直接讀取：請先在瀏覽器打開連結，跳到 Google 地圖後複製網址列的完整網址貼上（短網址仍會保留給導航用）'; hint.classList.add('warn'); }
     renderForm();
   });
 
@@ -1069,14 +1060,7 @@
     else if (d.fm) form.m.has(d.fm) ? form.m.delete(d.fm) : form.m.add(d.fm);
     else if (d.ft) form.t.has(d.ft) ? form.t.delete(d.ft) : form.t.add(d.ft);
     else if ('fpl' in d) form.place = d.fpl || null;
-    else if ('fxy' in d) {
-      if (form.lat != null) { form.lat = null; form.lng = null; }
-      else {
-        await locate(true);
-        if (here.status !== 'ok') { toast(here.status === 'denied' ? '沒有位置權限' : '暫時無法定位'); return; }
-        form.lat = here.lat; form.lng = here.lng;
-      }
-    }
+    else if ('fxy' in d) { openLoc({ type: 'form' }); return; }
     else return;
     buzz(5);
     renderForm();
@@ -1155,6 +1139,224 @@
     updateCount();
     buzz(16);
     toast(wasEditing ? `已更新「${n}」` : `已加入「${n}」`);
+  });
+
+  // ---------- 位置設定（不在現場也能設定：搜尋地址、貼 Google 地圖連結、或用目前位置） ----------
+  // 地址搜尋用 OpenStreetMap Nominatim（開源、免金鑰；依使用規範只在按下搜尋時查詢），地圖用 Leaflet + OSM 圖磚，開啟時才載入
+  const LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+  const DEFAULT_CENTER = [25.0478, 121.5170]; // 台北車站
+  const loc = { target: null, lat: null, lng: null, results: [] };
+  let locMap = null;
+  let pinOn = false; // 中央圖釘是否啟用：啟用時，地圖中心就是選到的位置
+
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (!loadLeaflet.p) {
+      loadLeaflet.p = new Promise((resolve, reject) => {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = `${LEAFLET}leaflet.min.css`;
+        document.head.append(css);
+        const js = document.createElement('script');
+        js.src = `${LEAFLET}leaflet.min.js`;
+        js.onload = resolve;
+        js.onerror = () => { loadLeaflet.p = null; reject(new Error('leaflet')); };
+        document.head.append(js);
+      });
+    }
+    return loadLeaflet.p;
+  }
+
+  function locHint(text, warn = false) {
+    const h = $('#locHint');
+    h.textContent = text;
+    h.classList.toggle('warn', warn);
+  }
+
+  async function ensureLocMap(center, zoom) {
+    try { await loadLeaflet(); } catch (e) { $('#locMap').innerHTML = '<span class="loc-map-empty">地圖載入失敗，仍可用搜尋或目前位置設定</span>'; return null; }
+    if (!locMap) {
+      $('#locMap').innerHTML = '';
+      locMap = L.map('locMap', { zoomControl: true, attributionControl: true }).setView(center, zoom);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+      }).addTo(locMap);
+      // 像 Google「在地圖上選擇」：圖釘固定在正中央，拖動地圖對準位置；點地圖某處就平移過去
+      locMap.on('dragstart', () => { loc.label = '地圖上選的位置'; });
+      locMap.on('click', (e) => { loc.label = '地圖上選的位置'; pinAt(); locMap.panTo(e.latlng); });
+      locMap.on('moveend', () => { if (pinOn) readCenter(); });
+    } else {
+      locMap.setView(center, zoom);
+    }
+    setTimeout(() => locMap && locMap.invalidateSize(), 320); // 等視窗動畫結束再重算尺寸
+    return locMap;
+  }
+
+  function pinAt() {
+    pinOn = true;
+    $('#locPin').hidden = false;
+  }
+
+  function readCenter() {
+    const c = locMap.getCenter();
+    loc.lat = c.lat;
+    loc.lng = c.lng;
+    $('#btnLocSave').disabled = false;
+    locHint(`已選：${loc.label}（${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}），拖動地圖讓圖釘對準位置即可微調`);
+  }
+
+  async function setLocPoint(lat, lng, label, zoom) {
+    loc.label = label;
+    const map = await ensureLocMap([lat, lng], zoom || (locMap ? Math.max(locMap.getZoom(), 16) : 17));
+    if (!map) { loc.lat = lat; loc.lng = lng; $('#btnLocSave').disabled = false; return; }
+    pinAt();
+    readCenter();
+  }
+
+  // 沒有地址可搜時：從目前畫面開始，拖動地圖選位置
+  $('#btnLocPick').addEventListener('click', async () => {
+    const map = await ensureLocMap(locMap ? locMap.getCenter() : (here.status === 'ok' ? [here.lat, here.lng] : DEFAULT_CENTER), locMap ? Math.max(locMap.getZoom(), 16) : 16);
+    if (!map) return;
+    loc.label = '地圖上選的位置';
+    pinAt();
+    readCenter();
+    locHint('拖動地圖，讓中間的圖釘對準位置，再按儲存');
+    $('#locMap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  function openLoc(target) {
+    loc.target = target;
+    const cur = target.type === 'place' ? target.place : form;
+    const has = cur && typeof cur.lat === 'number' && typeof cur.lng === 'number';
+    loc.lat = has ? cur.lat : null;
+    loc.lng = has ? cur.lng : null;
+    loc.results = [];
+    const name = target.type === 'place' ? target.place.name : ($('#fName').value.trim() || '店家');
+    $('#locTitle').textContent = `設定位置：${name}`;
+    $('#locQuery').value = target.type === 'form' ? $('#fName').value.trim() : '';
+    $('#locResults').innerHTML = '';
+    $('#btnLocSave').disabled = !has;
+    $('#btnLocClear').hidden = !has;
+    locHint(has ? '目前已設定位置，可重新搜尋，或拖動地圖調整' : '輸入地址或地點名稱後按搜尋、貼上 Google 地圖連結，或按「在地圖上選擇」');
+    pinOn = false;
+    $('#locPin').hidden = true;
+    $('#locSheet').classList.add('open');
+    $('#locSheet').setAttribute('aria-hidden', 'false');
+    $('#locBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (has) setLocPoint(cur.lat, cur.lng, '目前設定的位置', 17);
+    else ensureLocMap(here.status === 'ok' ? [here.lat, here.lng] : DEFAULT_CENTER, here.status === 'ok' ? 15 : 12);
+    setTimeout(() => $('#locQuery').focus({ preventScroll: true }), 300);
+  }
+
+  function closeLoc() {
+    $('#locSheet').classList.remove('open');
+    $('#locSheet').setAttribute('aria-hidden', 'true');
+    $('#locBackdrop').classList.remove('open');
+    if (!sheetOpen()) document.body.style.overflow = '';
+  }
+  const locOpen = () => $('#locSheet').classList.contains('open');
+
+  $('#btnLocClose').addEventListener('click', closeLoc);
+  $('#locBackdrop').addEventListener('click', closeLoc);
+
+  $('#locForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = $('#locQuery').value.trim();
+    if (!q) return;
+    $('#locResults').innerHTML = '';
+    // 貼的是 Google 地圖連結：直接讀座標
+    if (/https?:\/\//.test(q)) {
+      const r = parseMapsShare(q);
+      if (r.lat != null) { setLocPoint(r.lat, r.lng, r.name || 'Google 地圖上的位置', 17); return; }
+      if (r.short) locHint('短網址無法直接讀取：請先在瀏覽器打開這個連結，跳到 Google 地圖後，複製網址列的完整網址再貼上', true);
+      else locHint('這個連結裡找不到座標，請改用地址搜尋或在地圖上點選', true);
+      return;
+    }
+    const search = async (text) => {
+      const params = new URLSearchParams({ format: 'jsonv2', q: text, countrycodes: 'tw', 'accept-language': 'zh-TW', limit: '6' });
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+      if (!res.ok) throw new Error(res.status);
+      return res.json();
+    };
+    // OpenStreetMap 常沒有台灣門牌：查不到時去掉門牌號碼與「里」，退到路名再查一次
+    const roadOnly = q.replace(/\d+(之\d+)?號.*$/, '').replace(/[^\s區鄉鎮市]{1,4}里(?=\S)/, '').trim();
+    let fallback = false;
+    locHint('搜尋中…');
+    try {
+      loc.results = await search(q);
+      if (!loc.results.length && roadOnly && roadOnly !== q) {
+        await sleep(1100); // Nominatim 使用規範：每秒最多查一次
+        loc.results = await search(roadOnly);
+        fallback = loc.results.length > 0;
+      }
+    } catch (err) {
+      locHint('搜尋失敗，請稍後再試，或改用目前位置、在地圖上點選', true);
+      return;
+    }
+    if (!loc.results.length) {
+      locHint('找不到這個地址。可以試試路名、附近地標，或直接在地圖上點選', true);
+      return;
+    }
+    locHint(fallback
+      ? `找不到門牌，以下是「${roadOnly}」的結果。選了之後拖動地圖，讓圖釘對準確切位置`
+      : `找到 ${loc.results.length} 筆，選一個最接近的`, fallback);
+    $('#locResults').innerHTML = loc.results.map((r, i) => {
+      const name = r.name || r.display_name.split(',')[0];
+      return `<li><button type="button" class="loc-result" data-li="${i}"><b>${esc(name)}</b><span>${esc(r.display_name)}</span></button></li>`;
+    }).join('');
+  });
+
+  $('#locResults').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-li]');
+    if (!b) return;
+    const r = loc.results[+b.dataset.li];
+    $('#locResults').innerHTML = '';
+    setLocPoint(+r.lat, +r.lon, r.name || r.display_name.split(',')[0], 17);
+  });
+
+  $('#btnLocHere').addEventListener('click', async () => {
+    locHint('正在取得你的位置…');
+    await locate(true);
+    if (here.status !== 'ok') { locHint(here.status === 'denied' ? '沒有位置權限，請到瀏覽器設定允許' : '暫時無法定位', true); return; }
+    setLocPoint(here.lat, here.lng, '目前位置', 17);
+  });
+
+  $('#btnLocSave').addEventListener('click', () => {
+    if (loc.lat == null) return;
+    const t = loc.target;
+    if (t.type === 'place') {
+      t.place.lat = loc.lat;
+      t.place.lng = loc.lng;
+      save();
+      renderPlaceList();
+      renderPlaces();
+      updateCount();
+      toast(`「${t.place.name}」位置已儲存`);
+    } else {
+      form.lat = loc.lat;
+      form.lng = loc.lng;
+      renderForm();
+    }
+    closeLoc();
+  });
+
+  $('#btnLocClear').addEventListener('click', () => {
+    const t = loc.target;
+    if (t.type === 'place') {
+      delete t.place.lat;
+      delete t.place.lng;
+      save();
+      renderPlaceList();
+      renderPlaces();
+      updateCount();
+      toast(`已清除「${t.place.name}」的位置`);
+    } else {
+      form.lat = null;
+      form.lng = null;
+      renderForm();
+    }
+    closeLoc();
   });
 
   // ---------- History view ----------
@@ -1306,9 +1508,10 @@
 
   // ---------- Global ----------
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && locOpen()) { closeLoc(); return; }
     if (e.key === 'Escape' && sheetOpen()) { closeSheet(); return; }
     const tag = (document.activeElement && document.activeElement.tagName) || '';
-    if (sheetOpen() || /INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    if (sheetOpen() || locOpen() || /INPUT|TEXTAREA|SELECT/.test(tag)) return;
     if (e.key === 'Escape' && view === 'result') { switchView('decide'); return; }
     if (view !== 'decide' && view !== 'result') return;
     if (e.code === 'Space') { e.preventDefault(); if (!$('#btnSpin').disabled) spin(); }
