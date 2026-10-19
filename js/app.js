@@ -22,17 +22,20 @@
   const MEALS = { L: { label: '午餐' }, D: { label: '晚餐' }, N: { label: '宵夜' } };
   const BUDGETS = [
     { v: 0, label: '不限' },
-    { v: 1, label: '$150 以下' },
-    { v: 2, label: '$150–400' },
-    { v: 3, label: '$400 以上' },
+    { v: 1, label: '月底' },
+    { v: 2, label: '發薪' },
+    { v: 3, label: '年終' },
   ];
   const MOODS = [
     ['hot', '熱的'], ['light', '清淡'], ['heavy', '重口味'], ['fast', '快速'],
     ['soup', '有湯'], ['rice', '飯'], ['noodle', '麵'],
   ];
   const TAG_LABEL = Object.fromEntries(MOODS);
-  const PRICE = { 1: '$150 以下', 2: '$150–400', 3: '$400 以上' };
-  const PRICE_ABOUT = { 1: '約 $150 以下', 2: '約 $150–400', 3: '約 $400 以上' };
+  // 價位只分等級、不寫金額：同一道菜各店價差大，寫死金額容易誤導
+  // p 可以是單一等級（2）或範圍（[2, 3]），例如牛肉麵一般店發薪、名店到年終
+  const PRICE = { 1: '月底', 2: '發薪', 3: '年終' };
+  const tiers = (x) => [].concat(x.p);
+  const priceLabel = (x) => { const t = tiers(x); return t.length > 1 ? `${PRICE[t[0]]}～${PRICE[t[t.length - 1]]}` : PRICE[t[0]]; };
   // 圖示選單：內建清單用到的 emoji 優先，再補幾個常用的
   const EMOJI_PICKS = [...new Set(['🍽️', ...FOODS.map((f) => f.e), '🥢', '🍰', '🥤', '☕', '🍺'])];
   // 依名稱自動挑圖示：先比對內建清單的品名，再比對關鍵字，最後用類型預設
@@ -148,7 +151,7 @@
   function matches(x) {
     const f = S.filters;
     return x.m.includes(meal) &&
-      (!f.budget || x.p === f.budget) &&
+      (!f.budget || tiers(x).includes(f.budget)) &&
       f.moods.every((t) => x.t.includes(t)) &&
       (!f.cats.length || f.cats.includes(x.c));
   }
@@ -411,7 +414,7 @@
     if (rest && x.note) notes.push(x.note);
     $('#resultNote').hidden = !notes.length;
     $('#resultNote').textContent = notes.join(' · ');
-    $('#resultPrice').textContent = PRICE_ABOUT[x.p];
+    $('#resultPrice').textContent = priceLabel(x);
     const tags = x.t.filter((t) => ['soup', 'hot', 'light', 'heavy', 'fast'].includes(t)).slice(0, 2).map((t) => TAG_LABEL[t]);
     $('#resultTags').textContent = tags.length ? tags.join('・') : x.m.split('').map((k) => MEALS[k].label).join('・');
 
@@ -549,6 +552,7 @@
     $$('.view').forEach((v) => v.classList.toggle('active', v.id === `view-${name}`));
     const tabName = name === 'result' ? 'decide' : name;
     $$('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === tabName)));
+    placeChrome();
     window.scrollTo(0, 0);
     if (name === 'list') renderList();
     if (name === 'history') renderHistory();
@@ -596,7 +600,7 @@
   function rowHTML(x, dis, showCat) {
     const on = !dis.has(x.id);
     const meals = x.m.split('').map((k) => MEALS[k]?.label).filter(Boolean).join('/');
-    const sub = [showCat ? x.c : '', PRICE[x.p], meals, ...x.t.slice(0, 2).map((t) => TAG_LABEL[t])].filter(Boolean).join(' · ');
+    const sub = [showCat ? x.c : '', priceLabel(x), meals, ...x.t.slice(0, 2).map((t) => TAG_LABEL[t])].filter(Boolean).join(' · ');
     return `<li class="row${on ? '' : ' is-off'}" data-id="${esc(x.id)}">
       <span class="row-emoji">${esc(x.e)}</span>
       <div class="row-main">
@@ -632,7 +636,7 @@
   function rcardHTML(r, dis) {
     const on = !dis.has(r.id);
     const place = placeById(r.place);
-    const sub = [r.c, PRICE[r.p], place ? place.name : '', r.note].filter(Boolean).join(' · ');
+    const sub = [r.c, priceLabel(r), place ? place.name : '', r.note].filter(Boolean).join(' · ');
     return `<div class="rcard${on ? '' : ' is-off'}" data-id="${esc(r.id)}">
       <span class="rc-icon">${esc(r.e)}</span>
       <div class="rc-main"><div class="rc-name">${esc(r.n)}</div><div class="rc-sub">${esc(sub)}</div></div>
@@ -934,7 +938,7 @@
   let editing = null;
 
   const newForm = (kind) => ({
-    e: '🥢', eAuto: true, c: '中式', p: 1, m: new Set(['L', 'D']), t: new Set(),
+    e: '🥢', eAuto: true, c: '中式', p: new Set([2]), m: new Set(['L', 'D']), t: new Set(),
     place: kind === 'rest' ? defaultPlaceForNew() : null, lat: null, lng: null, url: '',
   });
 
@@ -950,7 +954,7 @@
     $('#fCat').innerHTML = CATEGORIES.map((c) => chip(c, `data-fc="${c}"`, c === form.c)).join('');
     $('#fMeal').innerHTML = Object.entries(MEALS).map(([k, v]) => chip(v.label, `data-fm="${k}"`, form.m.has(k))).join('');
     $('#fTags').innerHTML = MOODS.map(([k, l]) => chip(l, `data-ft="${k}"`, form.t.has(k))).join('');
-    $$('#fPrice button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.p === form.p)));
+    $$('#fPrice button').forEach((b) => b.setAttribute('aria-pressed', String(form.p.has(+b.dataset.p))));
     if (sheetKind === 'rest') {
       $('#fPlace').innerHTML =
         S.places.map((p) => chip(esc(p.name), `data-fpl="${esc(p.id)}"`, form.place === p.id)).join('') +
@@ -968,7 +972,7 @@
     form = newForm(kind);
     if (item) {
       Object.assign(form, {
-        e: item.e, eAuto: false, c: item.c, p: item.p, m: new Set(item.m.split('')), t: new Set(item.t),
+        e: item.e, eAuto: false, c: item.c, p: new Set(tiers(item)), m: new Set(item.m.split('')), t: new Set(item.t),
         place: item.place || null,
         lat: hasXY(item) ? item.lat : null, lng: hasXY(item) ? item.lng : null, url: item.url || '',
       });
@@ -1039,7 +1043,11 @@
     const d = b.dataset;
     if (d.em) { form.e = d.em; form.eAuto = false; }
     else if (d.fc) { form.c = d.fc; autoEmoji(); }
-    else if (d.p) form.p = +d.p;
+    else if (d.p) {
+      // 價位可複選，但至少留一個
+      const v = +d.p;
+      if (form.p.has(v)) { if (form.p.size > 1) form.p.delete(v); } else form.p.add(v);
+    }
     else if (d.fm) form.m.has(d.fm) ? form.m.delete(d.fm) : form.m.add(d.fm);
     else if (d.ft) form.t.has(d.ft) ? form.t.delete(d.ft) : form.t.add(d.ft);
     else if ('fpl' in d) form.place = d.fpl || null;
@@ -1099,7 +1107,7 @@
       return;
     }
     const base = {
-      n, e: form.e, c: form.c, p: form.p,
+      n, e: form.e, c: form.c, p: form.p.size > 1 ? [...form.p].sort() : [...form.p][0],
       t: [...form.t],
       m: form.m.size ? ['L', 'D', 'N'].filter((k) => form.m.has(k)).join('') : 'LDN',
     };
@@ -1295,7 +1303,28 @@
     if (m !== meal) { meal = m; renderMeal(); updateCount(); }
   });
 
+  // ---------- 電腦版版面 ----------
+  // 電腦版：分頁列放在各頁標題下方，安裝提示改浮在畫面底部；手機版維持底部分頁列、安裝提示在頂部
+  const desktopMQ = matchMedia('(min-width: 900px)');
+  function placeChrome() {
+    const nav = $('.tabbar');
+    const inst = $('#install');
+    const desktop = desktopMQ.matches;
+    document.body.classList.toggle('is-desktop', desktop);
+    if (desktop) {
+      const head = $('.view.active .page-top, .view.active .bar');
+      if (head && head.nextElementSibling !== nav) head.after(nav);
+      if (inst.parentElement !== document.body) $('#sheetBackdrop').before(inst);
+    } else {
+      if (nav.parentElement !== document.body) $('#sheetBackdrop').before(nav);
+      const top = $('#view-decide .page-top');
+      if (top.nextElementSibling !== inst) top.after(inst);
+    }
+  }
+  desktopMQ.addEventListener?.('change', placeChrome);
+
   // ---------- Init ----------
+  placeChrome();
   applyTheme();
   renderMeal();
   renderFilters();
