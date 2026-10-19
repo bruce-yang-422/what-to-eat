@@ -1,6 +1,6 @@
-/* Service Worker — offline-first app shell
- * 更新網站內容後，請修改 VERSION 讓使用者取得新版本 */
-const VERSION = 'wte-v1.0.1';
+/* Service Worker — 離線快取
+ * 一律「有網路抓最新、離線才用快取」，更新網站不需要改 VERSION（固定 v1.0.0） */
+const VERSION = 'wte-v1.0.0';
 const SHELL = [
   './',
   './index.html',
@@ -59,12 +59,12 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Static assets: stale-while-revalidate
+  // Static assets: network-first，離線才用快取（確保 HTML 與 JS／CSS 永遠是同一版）
   e.respondWith(
-    caches.open(VERSION).then(async (c) => {
-      const hit = await c.match(req, { ignoreSearch: true });
-      const net = fetch(req).then((res) => { if (res.ok) c.put(req, res.clone()); return res; }).catch(() => hit);
-      return hit || net;
-    })
+    caches.open(VERSION).then((c) =>
+      fetch(req)
+        .then((res) => { if (res.ok) c.put(req, res.clone()); return res; })
+        .catch(() => c.match(req, { ignoreSearch: true }))
+    )
   );
 });
