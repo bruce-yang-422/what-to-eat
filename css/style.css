@@ -253,8 +253,16 @@ a { color: inherit; }
 .ctile.is-off .ct-emoji { filter: grayscale(1); opacity: .5; }
 
 /* 第二層標題列 */
-.drill-head { display: flex; align-items: center; gap: 6px; margin: -4px 0 2px; }
-.drill-head .icon-btn { margin-left: -8px; }
+/* 返回類型總覽：有文字的按鈕，比單一箭頭清楚 */
+.back-link {
+  display: inline-flex; align-items: center; gap: 4px; justify-self: start; height: 36px; padding: 0 14px 0 8px;
+  border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface);
+  font-size: 14px; font-weight: 700; color: var(--primary-text);
+}
+.back-link .ic { width: 18px; height: 18px; }
+@media (hover: hover) { .back-link:hover { border-color: var(--primary); background: var(--primary-soft); } }
+.back-link.bottom { justify-self: center; margin-top: 4px; }
+.drill-head { display: flex; align-items: center; gap: 6px; margin: 0 0 2px; }
 .drill-main { flex: 1; min-width: 0; }
 .drill-title { font-size: 21px; font-weight: 700; letter-spacing: .06em; }
 .drill-sub { font-size: 12px; color: var(--muted); }

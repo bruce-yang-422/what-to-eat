@@ -31,7 +31,7 @@ const FOODS = [
   { id: 'f018', n: '皮蛋瘦肉粥', e: '🥣', c: '中式', p: [1, 2], t: ['hot', 'light', 'fast', 'soup', 'rice'], m: 'LDN', h: 'y', hn: '皮蛋' },
   { id: 'f019', n: '麻婆豆腐飯', e: '🍛', c: '中式', p: 2, t: ['hot', 'heavy', 'fast', 'rice'], m: 'LD', h: 'y', hn: '重油勾芡' },
   { id: 'f020', n: '蝦仁燴飯', e: '🍚', c: '中式', p: 2, t: ['hot', 'fast', 'rice'], m: 'LD', h: 'y', hn: '勾芡' },
-  { id: 'f021', n: '雞絲麵', e: '🍜', c: '中式', p: 1, t: ['hot', 'light', 'fast', 'soup', 'noodle'], m: 'LDN', h: 'g', hn: '湯麵' },
+  { id: 'f021', n: '雞絲麵', e: '🍜', c: '中式', p: 1, t: ['hot', 'light', 'fast', 'soup', 'noodle'], m: 'LDN', h: 'y', hn: '雞絲麵是油炸麵' },
   { id: 'f022', n: '酸辣湯餃', e: '🥟', c: '中式', p: [1, 2], t: ['hot', 'heavy', 'fast', 'soup'], m: 'LD', h: 'y', hn: '勾芡' },
   { id: 'f023', n: '砂鍋魚頭', e: '🐟', c: '中式', p: 3, t: ['hot', 'heavy', 'soup'], m: 'LD', h: 'y', hn: '炸魚頭' },
   { id: 'f024', n: '豆腐煲', e: '🍲', c: '中式', p: [2, 3], t: ['hot', 'heavy', 'soup'], m: 'LD', h: 'y', hn: '炸豆腐' },

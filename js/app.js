@@ -39,7 +39,7 @@
   const tiers = (x) => [].concat(x.p);
   // 健康紅綠燈：依烹調方式（炸／炒煎勾芡／蒸煮燙涮）標記，參考成大美侖診所營養師「食物紅綠燈」
   const HEALTH = {
-    g: { label: '綠燈', tip: '可以常吃' },
+    g: { label: '綠燈', tip: '可以常吃，醬料少加' }, // 沙茶、辣油、肉燥加多就等於黃燈
     y: { label: '黃燈', tip: '不宜天天吃' },
     r: { label: '紅燈', tip: '偶爾吃就好' },
   };
@@ -645,8 +645,8 @@
 
   function drillHeadHTML(c, list, dis) {
     const on = list.filter((x) => !dis.has(x.id)).length;
-    return `<div class="drill-head">
-      <button class="icon-btn" type="button" data-back-cats aria-label="回到類型總覽">${icon('back')}</button>
+    return `<button class="back-link" type="button" data-back-cats>${icon('back')}全部類型</button>
+    <div class="drill-head">
       <div class="drill-main"><div class="drill-title serif">${esc(catLabel(c))}</div><div class="drill-sub">已啟用 ${on} / ${list.length}</div></div>
       <button class="chip small" type="button" data-gset="${on ? 0 : 1}">${on ? '全部關閉' : '全部開啟'}</button>
     </div>`;
@@ -705,7 +705,8 @@
       // 第二層：單一類型
       items = all.filter((x) => inCat(x, listCat));
       box.className = 'groups';
-      box.innerHTML = drillHeadHTML(listCat, items, dis) + `<ul class="list">${items.map((x) => rowHTML(x, dis)).join('')}</ul>`;
+      box.innerHTML = drillHeadHTML(listCat, items, dis) + `<ul class="list">${items.map((x) => rowHTML(x, dis)).join('')}</ul>` +
+        `<button class="back-link bottom" type="button" data-back-cats>${icon('back')}回到全部類型</button>`;
     } else {
       // 第一層：類型總覽
       const cats = (S.custom.length ? ['__custom'] : []).concat(CATEGORIES);
