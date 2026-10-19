@@ -63,7 +63,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.open(VERSION).then((c) =>
       fetch(req)
-        .then((res) => { if (res.ok) c.put(req, res.clone()); return res; })
+        .then((res) => { if (res.ok) c.put(url.origin + url.pathname, res.clone()); return res; }) // 存成不含 ?v= 的網址，避免每版累積一份
         .catch(() => c.match(req, { ignoreSearch: true }))
     )
   );
