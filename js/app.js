@@ -75,7 +75,7 @@
     restaurants: [], places: DEFAULT_PLACES(),
     mode: 'type', place: '__here',
     settings: { avoidDays: 3, look: 'light' }, // look：light 亮色（預設）/ dark 暗色 / auto 跟隨系統
-    filters: { budget: 0, moods: [], cats: [] },
+    filters: { budget: 0, moods: [], cats: [], health: '' }, // health：'' 不限／noRed 避開紅燈／green 只要綠燈
   });
 
   function load() {
@@ -162,7 +162,9 @@
     return x.m.includes(meal) &&
       (!f.budget || tiers(x).includes(f.budget)) &&
       f.moods.every((t) => x.t.includes(t)) &&
-      (!f.cats.length || f.cats.includes(x.c));
+      (!f.cats.length || f.cats.includes(x.c)) &&
+      // 沒有燈號的（口袋餐廳、自訂食物）不受健康篩選影響
+      (!f.health || !x.h || (f.health === 'green' ? x.h === 'g' : x.h !== 'r'));
   }
 
   function inPlace(r) {
@@ -254,6 +256,7 @@
       const c = b.dataset.cat;
       b.setAttribute('aria-pressed', String(c ? f.cats.includes(c) : f.cats.length === 0));
     });
+    $$('#healthChips .chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.health === (f.health || ''))));
     const d = S.settings.avoidDays;
     $('#avoidText').textContent = d ? `避開最近 ${d} 天吃過` : '不避開最近吃過的';
     updateCount();
@@ -263,7 +266,7 @@
     const n = basePool().length;
     const f = S.filters;
     const pocketEmpty = isPocket() && !S.restaurants.length;
-    $('#btnReset').hidden = !(f.budget || f.moods.length || f.cats.length);
+    $('#btnReset').hidden = !(f.budget || f.moods.length || f.cats.length || f.health);
     $('#poolCount').innerHTML = pocketEmpty
       ? '把常去的店存起來，之後就能從裡面抽'
       : `符合條件 <b>${n}</b> ${isPocket() ? '家' : '個選項'}`;
@@ -281,9 +284,11 @@
     const bud = t.closest('[data-budget]');
     const md = t.closest('[data-mood]');
     const ct = t.closest('#catChips [data-cat]');
-    if (bud || md || ct) {
+    const hc = t.closest('[data-health]');
+    if (bud || md || ct || hc) {
       const f = S.filters;
-      if (bud) f.budget = +bud.dataset.budget;
+      if (hc) f.health = hc.dataset.health;
+      else if (bud) f.budget = +bud.dataset.budget;
       else if (md) toggleIn(f.moods, md.dataset.mood);
       else {
         const c = ct.dataset.cat;
@@ -328,6 +333,7 @@
   function renderMode() {
     $$('#modeTabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === S.mode)));
     $('#placeBlock').hidden = !isPocket();
+    $('#healthGroup').hidden = isPocket(); // 口袋餐廳沒有燈號
     renderPlaces();
     updateCount();
   }

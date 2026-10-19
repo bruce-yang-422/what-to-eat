@@ -165,6 +165,14 @@
             <span class="flabel">料理類型 <small>可複選</small></span>
             <div class="chips" id="catChips"></div>
           </div>
+          <div class="fgroup" id="healthGroup">
+            <span class="flabel">健康</span>
+            <div class="chips" id="healthChips">
+              <button class="chip" type="button" data-health="" aria-pressed="true">不限</button>
+              <button class="chip" type="button" data-health="noRed" aria-pressed="false"><i class="hdot h-y"></i>避開紅燈</button>
+              <button class="chip" type="button" data-health="green" aria-pressed="false"><i class="hdot h-g"></i>只要綠燈</button>
+            </div>
+          </div>
           <button class="row-link" type="button" data-goto="settings">
             <svg class="ic"><use href="#i-ban"/></svg>
             <span id="avoidText">避開最近 3 天吃過</span>

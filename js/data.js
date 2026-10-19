@@ -89,7 +89,7 @@ const FOODS = [
   { id: 'f074', n: '台南牛肉湯', e: '🍲', c: '小吃', p: 2, t: ['hot', 'soup', 'light'], m: 'LN', h: 'g', hn: '清湯' },
   { id: 'f075', n: '胡椒餅', e: '🥟', c: '小吃', p: 1, t: ['hot', 'fast'], m: 'LD', h: 'y', hn: '豬油餅皮' },
   { id: 'f076', n: '生煎包', e: '🥟', c: '小吃', p: 1, t: ['hot', 'fast'], m: 'LD', h: 'y', hn: '油煎' },
-  { id: 'f077', n: '蔥抓餅加蛋', e: '🥞', c: '小吃', p: 1, t: ['hot', 'fast'], m: 'LDN', h: 'y', hn: '油煎' },
+  { id: 'f077', n: '蔥油餅', e: '🥞', c: '小吃', p: 1, t: ['hot', 'fast'], m: 'LDN', h: 'y', hn: '油煎' },
   { id: 'f078', n: '花枝羹', e: '🦑', c: '小吃', p: [1, 2], t: ['hot', 'soup', 'fast'], m: 'LDN', h: 'y', hn: '勾芡' },
   { id: 'f079', n: '包子', e: '🥟', c: '小吃', p: 1, t: ['hot', 'fast'], m: 'LD', h: 'g', hn: '清蒸' },
   { id: 'f080', n: '潤餅', e: '🌯', c: '小吃', p: 1, t: ['fast', 'light'], m: 'LD', h: 'g', hn: '蔬菜多' },
