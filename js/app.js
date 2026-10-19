@@ -843,7 +843,7 @@
           ? `<a class="place-map" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener" aria-label="在 Google 地圖查看 ${esc(p.name)}" title="在 Google 地圖查看">${icon('pin')}</a>`
           : icon('pin')}
         <div class="place-main" data-pset><div class="place-name">${esc(p.name)}</div>
-          <div class="place-sub">${n} 家餐廳 · ${hasXY(p) ? esc(p.addr || '已設定位置') : '<span class="unset">尚未設定位置</span>'}</div></div>
+          <div class="place-sub"><span>${n} 家餐廳</span>${hasXY(p) ? `<span class="loc-chip">${esc(p.addr || '已設定位置')}</span>` : '<span class="unset">尚未設定位置</span>'}</div></div>
         <button class="text-btn" type="button" data-pset>${hasXY(p) ? '修改位置' : '設定位置'}</button>
         <button class="icon-btn" type="button" data-pdel aria-label="刪除 ${esc(p.name)}">${icon('trash')}</button>
       </li>`;
